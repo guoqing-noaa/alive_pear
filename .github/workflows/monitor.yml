@@ -1,8 +1,8 @@
 name: Monitor HPC Session
 
 on:
-  schedule:
-    - cron: "*/20 * * * *"   # every 20 minutes
+  #schedule:
+  #  - cron: "*/20 * * * *"   # every 20 minutes
   workflow_dispatch:
 
 permissions:
