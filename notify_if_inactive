@@ -1,0 +1,24 @@
+#!/bin/bash
+# shellcheck disable=all
+# Usage: monitor.sh <threshold_secs> <email_addr> <email_tag>
+rundir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+cd "${rundir}"
+
+threshold_secs=1500  # the time peroid without new commits
+if (( $# > 1 )); then
+  threshold_secs=$1
+  email_addr=$2
+  email_tag=$3
+else
+  echo "Usage: monitor.sh <threshold_secs> <email_addr> <email_tag>"
+  exit 1
+fi
+
+LAST=$(git log -1 origin/main --format=%ct)
+NOW=$(date -u +%s)
+DIFF=$((NOW-LAST))
+if (( DIFF >= threshold_secs )); then
+  subject="session is dead: ${email_tag}"
+  recipents="${email_addr} ${email_addr}"  # add additional email addresses if needed
+  echo "-" | mail -s "${subject}" ${recipents}
+fi
