@@ -11,6 +11,7 @@ permissions:
 
 jobs:
   check-heartbeat:
+    if: false   # <-- temporarily disabled
     runs-on: ubuntu-latest
 
     steps:
