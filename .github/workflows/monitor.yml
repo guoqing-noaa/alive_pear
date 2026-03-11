@@ -23,7 +23,7 @@ jobs:
         id: commit
         run: |
           git fetch origin
-          LAST_COMMIT_TIME=$(git log -1 origin/main --format=%cd --date=iso-strict)
+          LAST_COMMIT_TIME=$(TZ=UTC git log -1 origin/main --format=%cd --date=iso-strict)
           LAST_COMMIT_EPOCH=$(git log -1 origin/main --format=%ct)
 
           echo "commit_time=$LAST_COMMIT_TIME" >> $GITHUB_OUTPUT
