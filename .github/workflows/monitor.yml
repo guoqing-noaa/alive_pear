@@ -16,12 +16,15 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Get last commit time
         id: commit
         run: |
-          LAST_COMMIT_TIME=$(git log -1 --format=%cd --date=iso-strict)
-          LAST_COMMIT_EPOCH=$(git log -1 --format=%ct)
+          git fetch origin
+          LAST_COMMIT_TIME=$(git log -1 origin/main --format=%cd --date=iso-strict)
+          LAST_COMMIT_EPOCH=$(git log -1 origin/main --format=%ct)
 
           echo "commit_time=$LAST_COMMIT_TIME" >> $GITHUB_OUTPUT
           echo "commit_epoch=$LAST_COMMIT_EPOCH" >> $GITHUB_OUTPUT
