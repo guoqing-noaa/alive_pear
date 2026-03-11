@@ -32,7 +32,7 @@ jobs:
 
           echo "Time difference: $DIFF seconds"
 
-          if [ $DIFF -gt 900 ]; then # if more than 15 minutes (900 seconds)
+          if [ $DIFF -gt 300 ]; then # if more than 15 minutes (900 seconds)
             echo "dead=true" >> $GITHUB_OUTPUT
           else
             echo "dead=false" >> $GITHUB_OUTPUT
