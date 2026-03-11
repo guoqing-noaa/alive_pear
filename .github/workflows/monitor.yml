@@ -5,6 +5,10 @@ on:
     - cron: "*/20 * * * *"   # every 20 minutes
   workflow_dispatch:
 
+permissions:
+  contents: read
+  issues: write
+
 jobs:
   check-heartbeat:
     runs-on: ubuntu-latest
