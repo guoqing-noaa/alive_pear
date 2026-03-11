@@ -1,0 +1,92 @@
+name: Monitor HPC Session
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"   # every 5 minutes
+  workflow_dispatch:
+
+jobs:
+  check-heartbeat:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Get last commit time
+        id: commit
+        run: |
+          LAST_COMMIT_TIME=$(git log -1 --format=%cd --date=iso-strict)
+          LAST_COMMIT_EPOCH=$(git log -1 --format=%ct)
+
+          echo "commit_time=$LAST_COMMIT_TIME" >> $GITHUB_OUTPUT
+          echo "commit_epoch=$LAST_COMMIT_EPOCH" >> $GITHUB_OUTPUT
+
+      - name: Check commit age
+        id: check
+        run: |
+          NOW=$(date -u +%s)
+          LAST=${{ steps.commit.outputs.commit_epoch }}
+
+          DIFF=$((NOW-LAST))
+
+          echo "Time difference: $DIFF seconds"
+
+          if [ $DIFF -gt 900 ]; then # if more than 15 minutes (900 seconds)
+            echo "dead=true" >> $GITHUB_OUTPUT
+          else
+            echo "dead=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check last alert issue
+        id: issuecheck
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = "rt_GAEA session dead";
+
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: "open",
+              per_page: 100
+            });
+
+            const found = issues.data.find(i => i.title === title);
+
+            if (!found) {
+              core.setOutput("should_create", "true");
+              return;
+            }
+
+            const created = new Date(found.created_at).getTime()/1000;
+            const now = Date.now()/1000;
+
+            const diff = now - created;
+
+            // 6 hours = 21600 seconds
+            if (diff > 21600) {
+              core.setOutput("should_create", "true");
+            } else {
+              core.setOutput("should_create", "false");
+            }
+
+      - name: Create alert issue
+        if: steps.check.outputs.dead == 'true' && steps.issuecheck.outputs.should_create == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = `
+            rt_GAEA session may be dead.
+
+            Last commit time: ${{ steps.commit.outputs.commit_time }}
+
+            Current UTC time: ${new Date().toISOString()}
+            `;
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: "rt_GAEA session dead",
+              body: body
+            });
